@@ -3,7 +3,7 @@ use crate::direnv::DirenvDiff;
 use crate::env::{__MISE_DIFF, PATH_KEY, TERM_WIDTH};
 use crate::env::{join_paths, split_paths};
 use crate::env_diff::{EnvDiff, EnvDiffOperation, EnvMap};
-use crate::file::{canonicalize_cached, display_rel_path};
+use crate::file::{canonicalize_cached, display_path, display_rel_path};
 use crate::hook_env::{PREV_SESSION, WatchFilePattern};
 use crate::shell::{ShellType, get_shell};
 use crate::toolset::{ResolveOptions, Toolset, ToolsetBuilder};
@@ -64,7 +64,13 @@ impl HookEnv {
                     {
                         trace!("failed to mark untrusted config warning seen: {mark_err}");
                     }
-                    return Err(err);
+                    // Entering a directory is not an explicit action, so show a
+                    // single-line warning instead of the full error chain.
+                    // Explicit commands still raise the full UntrustedConfig error.
+                    warn!(
+                        "{} is not trusted, run `mise trust` to enable it",
+                        display_path(&config_path)
+                    );
                 }
                 exit(1);
             }

@@ -6,7 +6,7 @@ unset CI GITHUB_ACTIONS GITHUB_ACTION
 
 contains_trust_warning() {
   local file="$1"
-  grep -Eq 'Config file(\(s\)|s)? in' "$file" && grep -q "are not trusted" "$file"
+  grep -q "not trusted" "$file"
 }
 
 run_hook_env() {
@@ -56,6 +56,11 @@ cd project
 run_hook_env "$first_stdout" "$first_stderr"
 if ! contains_trust_warning "$first_stderr"; then
   echo "expected first hook-env to report untrusted config"
+  cat "$first_stderr"
+  exit 1
+fi
+if grep -q "ERROR" "$first_stderr"; then
+  echo "expected hook-env untrusted config warning to be a warning, not an error"
   cat "$first_stderr"
   exit 1
 fi
